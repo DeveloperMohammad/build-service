@@ -1,0 +1,404 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Free online image upscaler tool with customizable compression levels. Enhance and optimize your images easily.">
+    <meta name="keywords" content="image upscaler, image optimizer, resize image, compress image, free image tool">
+    <meta name="author" content="Image Upscaler Tool">
+    <meta name="robots" content="index, follow">
+    <title>Image Upscaler - Enhance & Optimize Images</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        header {
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .main-content {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar {
+            flex: 0 0 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .ad-placeholder {
+            background: #e9ecef;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            min-height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ad-placeholder ins {
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            margin-bottom: 1.5rem;
+        }
+
+        .controls label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .controls input,
+        .controls select,
+        .controls button {
+            width: 100%;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .controls button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .controls button:hover {
+            background-color: #0056b3;
+        }
+
+        .preview, .original-preview {
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .preview img, .original-preview img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .preview a button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 1rem;
+            display: none;
+            width: 100%;
+        }
+
+        .preview a button:hover {
+            background-color: #218838;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            background: #333;
+            color: white;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                padding: 1rem;
+            }
+
+            .sidebar {
+                flex: 1;
+            }
+
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            header p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+            crossorigin="anonymous"></script>
+</head>
+<body>
+    <header>
+        <h1>Image Upscaler Tool</h1>
+        <p>Enhance and optimize your images with ease</p>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="controls">
+                <label for="imageInput">Select Image:</label>
+                <input type="file" id="imageInput" accept="image/*">
+
+                <label for="scaleFactor">Scale Factor:</label>
+                <select id="scaleFactor">
+                    <option value="2">2x</option>
+                    <option value="4">4x</option>
+                    <option value="8">8x</option>
+                    <option value="16">16x</option>
+                </select>
+
+                <label for="compressionLevel">Compression Level:</label>
+                <select id="compressionLevel">
+                    <option value="1.0">Max Quality (100%)</option>
+                    <option value="0.9">High Quality (90%)</option>
+                    <option value="0.7">Medium Quality (70%)</option>
+                    <option value="0.5">Low Quality (50%)</option>
+                </select>
+
+                <button id="processButton">Upscale & Optimize</button>
+            </div>
+
+            <div class="original-preview" id="originalPreview">
+                <h3>Original Image Preview</h3>
+                <img id="originalImage" alt="Original Image">
+            </div>
+
+            <div class="preview" id="preview">
+                <h3>Upscaled Image Preview</h3>
+                <img id="outputImage" alt="Upscaled Image">
+                <a id="downloadLink" href="#" download="upscaled-image.jpg">
+                    <button id="downloadButton">Download Image</button>
+                </a>
+            </div>
+        </div>
+        <div class="sidebar">
+            <div class="ad-placeholder">
+                <!-- Replace ca-pub-XXXXXXXXXXXXXXXX with your Google AdSense Ad Unit ID -->
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                     data ad-slot="YOUR_AD_SLOT_ID"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
+            <div class="ad-placeholder">
+                <!-- Replace ca-pub-XXXXXXXXXXXXXXXX with your Google AdSense Ad Unit ID -->
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                     data-ad-slot="YOUR_AD_SLOT_ID"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2025 Image Upscaler Tool. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const processButton = document.getElementById('processButton');
+            const imageInput = document.getElementById('imageInput');
+            const originalImage = document.getElementById('originalImage');
+            const outputImage = document.getElementById('outputImage');
+            const downloadLink = document.getElementById('downloadLink');
+            const downloadButton = document.getElementById('downloadButton');
+
+            // Real-time original image preview
+            imageInput.addEventListener('change', () => {
+                if (imageInput.files && imageInput.files.length > 0) {
+                    const file = imageInput.files[0];
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        originalImage.src = e.target.result;
+                        originalImage.style.display = 'block';
+                        // Reset upscaled image and download button
+                        outputImage.src = '';
+                        outputImage.style.display = 'none';
+                        downloadLink.href = '#';
+                        downloadButton.style.display = 'none';
+                    };
+                    reader.onerror = function() {
+                        alert('Error reading the image file. Please try another image.');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    originalImage.src = '';
+                    originalImage.style.display = 'none';
+                    outputImage.src = '';
+                    outputImage.style.display = 'none';
+                    downloadLink.href = '#';
+                    downloadButton.style.display = 'none';
+                }
+            });
+
+            // Process image for upscaling
+            processButton.addEventListener('click', () => {
+                const scaleFactor = parseFloat(document.getElementById('scaleFactor').value);
+                const compressionLevel = parseFloat(document.getElementById('compressionLevel').value);
+
+                if (!imageInput.files || imageInput.files.length === 0) {
+                    alert('Please select an image.');
+                    return;
+                }
+
+                const file = imageInput.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            canvas.width = img.width * scaleFactor;
+                            canvas.height = img.height * scaleFactor;
+
+                            // Nearest-neighbor upscaling
+                            ctx.imageSmoothingEnabled = false;
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                            // Generate data URL for the upscaled image
+                            const imageDataUrl = canvas.toDataURL('image/jpeg', compressionLevel);
+                            console.log('Generated data URL:', imageDataUrl.substring(0, 50) + '...'); // Log first 50 chars for debugging
+
+                            // Display the upscaled image
+                            outputImage.src = imageDataUrl;
+                            outputImage.style.display = 'block';
+
+                            // Update download link
+                            downloadLink.href = imageDataUrl;
+                            downloadButton.style.display = 'block';
+
+                            // Fallback for download if clicking the link doesn't work
+                            downloadLink.addEventListener('click', (event) => {
+                                if (!downloadLink.href || downloadLink.href === '#') {
+                                    event.preventDefault();
+                                    alert('No image available for download. Please upscale an image first.');
+                                    return;
+                                }
+                                try {
+                                    const link = document.createElement('a');
+                                    link.href = imageDataUrl;
+                                    link.download = 'upscaled-image.jpg';
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                } catch (error) {
+                                    console.error('Download error:', error);
+                                    alert('Error initiating download: ' + error.message);
+                                }
+                            }, { once: true }); // Use once to avoid multiple listeners
+                        } catch (error) {
+                            console.error('Processing error:', error);
+                            alert('Error processing the image: ' + error.message);
+                        }
+                    };
+                    img.onerror = function() {
+                        alert('Error loading the image. Please try another image.');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.onerror = function() {
+                    alert('Error reading the image file. Please try another image.');
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Initialize AdSense
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        });
+    </script>
+</body>
+</html>
